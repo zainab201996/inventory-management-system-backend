@@ -1,0 +1,46 @@
+{
+  "name": "boilerplate-server",
+  "version": "1.0.0",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only --clear --no-notify src/server.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate src/db/migrations/MigrationName -d src/config/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/config/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/config/data-source.ts",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/config/data-source.ts",
+    "migration:create": "typeorm-ts-node-commonjs migration:create src/db/migrations/MigrationName",
+    "schema:sync": "typeorm-ts-node-commonjs schema:sync -d src/config/data-source.ts",
+    "schema:drop": "typeorm-ts-node-commonjs schema:drop -d src/config/data-source.ts",
+    "seed:inventory-pages": "ts-node src/db/seed-inventory-pages.ts",
+    "verify:setup": "ts-node src/db/verify-setup.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "reflect-metadata": "^0.2.2",
+    "typeorm": "^0.3.28",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.5",
+    "@types/pg": "^8.10.9",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,1233 @@
+{
+	"info": {
+		"_postman_id": "inventory-api-collection",
+		"name": "Inventory Management API",
+		"description": "Complete API collection for Inventory Management System",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{access_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:7076",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "store_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "item_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "rate_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "transfer_note_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.access_token) {",
+									"        pm.collectionVariables.set('access_token', response.data.access_token);",
+									"        pm.collectionVariables.set('refresh_token', response.data.refresh_token || '');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with username and password. Returns access_token and refresh_token."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/refresh",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						},
+						"description": "Refresh access token using refresh token"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "Logout current user"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('user_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"john.doe\",\n    \"password\": \"SecurePass123!\",\n    \"email\": \"john.doe@example.com\",\n    \"full_name\": \"John Doe\",\n    \"sap_code\": 2001,\n    \"p_num\": \"+1234567890\",\n    \"role_ids\": [1]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							]
+						},
+						"description": "Create a new user. Requires: username, password, role_ids (array)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users?page=1&limit=10&sort_by=created_at&sort_order=desc&search=",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								},
+								{
+									"key": "search",
+									"value": ""
+								}
+							]
+						},
+						"description": "Get paginated list of users. Query params: page, limit, sort_by, sort_order, search"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Get user details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Access Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/:id/access",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id",
+								"access"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Get user's roles and permissions"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"updated.email@example.com\",\n    \"full_name\": \"John Doe Updated\",\n    \"role_ids\": [1]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Update user details. Can update: email, full_name, sap_code, p_num, role_ids, is_active"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"oldpassword\",\n    \"new_password\": \"NewSecurePass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"password"
+							]
+						},
+						"description": "Update current user's password. Requires authentication only."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{user_id}}"
+								}
+							]
+						},
+						"description": "Delete a user by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stores",
+			"item": [
+				{
+					"name": "Create Store",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('store_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"store_code\": \"STORE-001\",\n    \"store_name\": \"Main Warehouse\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/stores",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stores"
+							]
+						},
+						"description": "Create a new store"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Stores",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stores?page=1&limit=10&sort_by=created_at&sort_order=desc&all=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stores"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								},
+								{
+									"key": "all",
+									"value": "false",
+									"description": "Set to 'true' to get all stores without pagination"
+								}
+							]
+						},
+						"description": "Get paginated list of stores"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Store by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stores/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stores",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{store_id}}"
+								}
+							]
+						},
+						"description": "Get store details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Store",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"store_code\": \"STORE-001-UPDATED\",\n    \"store_name\": \"Updated Warehouse Name\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/stores/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stores",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{store_id}}"
+								}
+							]
+						},
+						"description": "Update store details"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Store",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/stores/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"stores",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{store_id}}"
+								}
+							]
+						},
+						"description": "Delete a store by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Items",
+			"item": [
+				{
+					"name": "Create Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('item_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_code\": \"ITEM-001\",\n    \"item_name\": \"Laptop Dell XPS 15\",\n    \"item_category\": \"Electronics\",\n    \"opening_stocks\": [\n        {\n            \"store_id\": 1,\n            \"opening_qty\": 20\n        },\n        {\n            \"store_id\": 2,\n            \"opening_qty\": 30\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"items"
+							]
+						},
+						"description": "Create a new item with optional opening stocks"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/items?page=1&limit=10&sort_by=created_at&sort_order=desc&all=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"items"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort_by",
+									"value": "created_at"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								},
+								{
+									"key": "all",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Get paginated list of items"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Item by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/items/:id?include_opening_stocks=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"items",
+								":id"
+							],
+							"query": [
+								{
+									"key": "include_opening_stocks",
+									"value": "false",
+									"description": "Set to 'true' to include opening stock details"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{item_id}}"
+								}
+							]
+						},
+						"description": "Get item details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_name\": \"Updated Item Name\",\n    \"item_category\": \"Updated Category\",\n    \"opening_stocks\": [\n        {\n            \"store_id\": 1,\n            \"opening_qty\": 25\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/items/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"items",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{item_id}}"
+								}
+							]
+						},
+						"description": "Update item details. If opening_stocks is provided, existing stocks are replaced."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/items/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"items",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{item_id}}"
+								}
+							]
+						},
+						"description": "Delete an item by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rates",
+			"item": [
+				{
+					"name": "Create Rate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('rate_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_id\": 1,\n    \"rate\": 1500.00,\n    \"effective_date\": \"2024-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rates",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates"
+							]
+						},
+						"description": "Create a new rate for an item. effective_date is optional (defaults to current date)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Rates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/rates?page=1&limit=10&sort_by=effective_date&sort_order=desc&item_id=&all=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort_by",
+									"value": "effective_date"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								},
+								{
+									"key": "item_id",
+									"value": "",
+									"description": "Filter rates by item_id"
+								},
+								{
+									"key": "all",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Get paginated list of rates. Can filter by item_id"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Rate for Item",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/rates/current/:item_id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates",
+								"current",
+								":item_id"
+							],
+							"variable": [
+								{
+									"key": "item_id",
+									"value": "{{item_id}}"
+								}
+							]
+						},
+						"description": "Get the most recent rate for an item"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Rate by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/rates/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{rate_id}}"
+								}
+							]
+						},
+						"description": "Get rate details by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Rate",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rate\": 1600.00,\n    \"effective_date\": \"2024-02-01\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/rates/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{rate_id}}"
+								}
+							]
+						},
+						"description": "Update rate details"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Rate",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/rates/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"rates",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{rate_id}}"
+								}
+							]
+						},
+						"description": "Delete a rate by ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Store Transfer Notes",
+			"item": [
+				{
+					"name": "Create Transfer Note",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    if (response.data && response.data.id) {",
+									"        pm.collectionVariables.set('transfer_note_id', response.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"v_no\": \"STN-001\",\n    \"date\": \"2024-01-15\",\n    \"ref_no\": \"REF-123\",\n    \"from_store_id\": 1,\n    \"to_store_id\": 2,\n    \"order_no\": \"ORD-456\",\n    \"details\": [\n        {\n            \"item_id\": 1,\n            \"item_code\": \"ITEM-001\",\n            \"item_name\": \"Laptop Dell XPS 15\",\n            \"qty\": 10,\n            \"ref\": \"Detail reference\"\n        },\n        {\n            \"item_id\": 2,\n            \"item_code\": \"ITEM-002\",\n            \"item_name\": \"Mouse Logitech\",\n            \"qty\": 5,\n            \"ref\": null\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/store-transfer-notes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"store-transfer-notes"
+							]
+						},
+						"description": "Create a store transfer note (master-detail transaction). Automatically creates stock movements."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Transfer Notes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/store-transfer-notes?page=1&limit=10&sort_by=date&sort_order=desc&from_store_id=&to_store_id=&all=false",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"store-transfer-notes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "sort_by",
+									"value": "date"
+								},
+								{
+									"key": "sort_order",
+									"value": "desc"
+								},
+								{
+									"key": "from_store_id",
+									"value": "",
+									"description": "Filter by source store"
+								},
+								{
+									"key": "to_store_id",
+									"value": "",
+									"description": "Filter by destination store"
+								},
+								{
+									"key": "all",
+									"value": "false"
+								}
+							]
+						},
+						"description": "Get paginated list of transfer notes. Can filter by stores"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Transfer Note by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/store-transfer-notes/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"store-transfer-notes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{transfer_note_id}}"
+								}
+							]
+						},
+						"description": "Get transfer note with all details and relations"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Transfer Note",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ref_no\": \"Updated Ref\",\n    \"details\": [\n        {\n            \"item_id\": 1,\n            \"item_code\": \"ITEM-001\",\n            \"item_name\": \"Laptop Dell XPS 15\",\n            \"qty\": 15\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/store-transfer-notes/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"store-transfer-notes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{transfer_note_id}}"
+								}
+							]
+						},
+						"description": "Update transfer note. If details are provided, existing details are replaced."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Transfer Note",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/store-transfer-notes/:id",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"store-transfer-notes",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "{{transfer_note_id}}"
+								}
+							]
+						},
+						"description": "Delete a transfer note. Also deletes details and related stock movements."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Roles",
+			"item": [
+				{
+					"name": "Get All Roles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/roles",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"roles"
+							]
+						},
+						"description": "Get all roles"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pages",
+			"item": [
+				{
+					"name": "Get All Pages",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/pages",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"pages"
+							]
+						},
+						"description": "Get all pages"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if server is running"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

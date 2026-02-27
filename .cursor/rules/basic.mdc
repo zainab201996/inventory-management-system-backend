@@ -1,0 +1,15 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+
+Don't run npm start by yourself. server is always already running.
+
+Use the coding style from files with "(Read Only)" in their names. These files are example for coding styles and architecture. They are never intended to edit. 
+
+Make a detailed todo list and start.
+
+Make sure to update API documentation if necessary after code changes. Keep it relevant and minimal
+
+Make sure to update the databse when necessary migration.

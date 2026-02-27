@@ -1,0 +1,30 @@
+# For Mac OS
+# Setup Postgres DB
+
+psql -U postgres
+
+create database boilerplate_db;
+
+create user boilerplate_user with password 'boilerplate';
+
+grant all privileges on database boilerplate_db to boilerplate_user;
+
+\c boilerplate_db
+
+create schema boilerplate_schema authorization boilerplate_user;
+
+alter role boilerplate_user set search_path to boilerplate_schema;
+
+grant all on schema boilerplate_schema to boilerplate_user;
+
+############
+
+# Initialize the tables
+
+psql -h localhost -U boilerplate_user -d boilerplate_db -f init-database.sql
+
+# Add Sample Data
+
+psql -h localhost -U boilerplate_user -d boilerplate_db -f seed-database.sql
+
+# Go to users page and select the "admin" user. Allow default sub division to the user to see results in reports
