@@ -69,7 +69,8 @@ export class AuthController {
         permissions
       };
 
-      sendSuccessResponse(res, { user: userResponse, accessToken: token }, 'Token verified successfully');
+      const settings = await AuthModel.getSettings();
+      sendSuccessResponse(res, { user: userResponse, accessToken: token, settings }, 'Token verified successfully');
     } catch (error) {
       logger.error('Token verification failed', {
         error: error instanceof Error ? error.message : 'Unknown error'

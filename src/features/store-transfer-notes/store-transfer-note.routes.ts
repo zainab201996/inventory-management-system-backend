@@ -8,6 +8,7 @@ router.use(authenticate);
 router.use(requirePermissionByRoute());
 
 router.post('/', StoreTransferNoteController.createTransferNote);
+router.get('/source-stores', StoreTransferNoteController.getSourceStoresWithStock);
 router.get('/check-stock/:item_id', StoreTransferNoteController.checkStockAvailability);
 router.get('/', StoreTransferNoteController.getTransferNotes);
 router.get('/:id', StoreTransferNoteController.getTransferNoteById);

@@ -17,6 +17,11 @@ export class StoreTransferNoteController {
         return sendValidationErrorResponse(res, 'Voucher number, from store, and to store are required');
       }
 
+      const voucherNumber = String(transferData.v_no).trim();
+      if (!/^[0-9]+$/.test(voucherNumber)) {
+        return sendValidationErrorResponse(res, 'Voucher number must be numeric only');
+      }
+
       if (transferData.from_store_id === transferData.to_store_id) {
         return sendValidationErrorResponse(res, 'From store and to store must be different');
       }
@@ -145,6 +150,8 @@ export class StoreTransferNoteController {
         }
       }
 
+      // v_no is locked on update; no need to validate
+
       if (transferData.details && transferData.details.length > 0) {
         for (const detail of transferData.details) {
           if (!detail.item_id || !detail.item_code || !detail.item_name || detail.qty === undefined) {
@@ -244,6 +251,55 @@ export class StoreTransferNoteController {
     } catch (error) {
       logger.error('Error checking stock availability', {
         error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      next(error);
+    }
+  }
+
+  static async getSourceStoresWithStock(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const itemIdParam = req.query.item_id as string;
+      if (!itemIdParam) {
+        return sendValidationErrorResponse(res, 'item_id query parameter is required');
+      }
+
+      const itemId = parseInt(itemIdParam, 10);
+      if (isNaN(itemId) || itemId <= 0) {
+        return sendValidationErrorResponse(res, 'item_id must be a positive integer');
+      }
+
+      const minQtyParam = req.query.min_qty as string | undefined;
+      const minQty = minQtyParam ? parseFloat(minQtyParam) : 0;
+      if (minQtyParam !== undefined && (isNaN(minQty) || minQty < 0)) {
+        return sendValidationErrorResponse(res, 'min_qty must be a non-negative number when provided');
+      }
+
+      const stockByStore = await StockCalculator.getCurrentStockByStoreForItem(itemId);
+      const storeIdsWithStock = Array.from(stockByStore.entries())
+        .filter(([, qty]) => qty > minQty)
+        .map(([storeId]) => storeId);
+
+      if (storeIdsWithStock.length === 0) {
+        return sendSuccessResponse(res, [], 'No stores have stock for this item');
+      }
+
+      const storeRepo = AppDataSource.getRepository(Store);
+      const stores = await storeRepo.find({
+        where: storeIdsWithStock.map((id) => ({ id })),
+        order: { store_name: 'ASC' },
+      });
+
+      const response = stores.map((store) => ({
+        store_id: store.id,
+        store_code: store.store_code,
+        store_name: store.store_name,
+        current_stock: parseFloat((stockByStore.get(store.id) ?? 0).toString()),
+      }));
+
+      sendSuccessResponse(res, response, 'Source stores with available stock retrieved successfully');
+    } catch (error) {
+      logger.error('Error getting source stores with stock', {
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       next(error);
     }

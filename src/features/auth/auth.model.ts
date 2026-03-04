@@ -32,6 +32,12 @@ export interface LoginResponse {
   };
   accessToken: string;
   refreshToken: string;
+  settings?: { currency_symbol: string; currency_code: string };
+}
+
+export interface AppSettings {
+  currency_symbol: string;
+  currency_code: string;
 }
 
 export class AuthModel {
@@ -140,11 +146,14 @@ export class AuthModel {
         };
 
         logger.info('User logged in successfully', { userId: user.id, username: user.username });
+
+        const settings = await AuthModel.getSettings();
         
         return {
           user: userResponse,
           accessToken,
-          refreshToken
+          refreshToken,
+          settings
         };
       } finally {
         client.release();
@@ -277,6 +286,32 @@ export class AuthModel {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       throw error;
+    }
+  }
+
+  /**
+   * Get app settings (e.g. currency) for login/UI. Fetched dynamically on login.
+   */
+  static async getSettings(): Promise<AppSettings> {
+    try {
+      const client = await dbConnection.getConnection();
+      try {
+        const result = await client.query(
+          `SELECT currency_symbol, currency_code FROM settings LIMIT 1`
+        );
+        const row = result.rows[0];
+        return {
+          currency_symbol: row?.currency_symbol ?? 'Rs',
+          currency_code: row?.currency_code ?? 'PKR',
+        };
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      logger.warn('Could not load settings, using defaults', {
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+      return { currency_symbol: 'Rs', currency_code: 'PKR' };
     }
   }
 

@@ -239,7 +239,7 @@ export class StoreTransferNoteModel {
         updated_at: new Date(),
       };
 
-      if (transferData.v_no !== undefined) updateData.v_no = transferData.v_no;
+      // Voucher number is locked after creation (not updatable)
       if (transferData.date !== undefined) updateData.date = new Date(transferData.date);
       if (transferData.ref_no !== undefined) updateData.ref_no = transferData.ref_no;
       if (transferData.from_store_id !== undefined) updateData.from_store_id = transferData.from_store_id;

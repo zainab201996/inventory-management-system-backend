@@ -78,23 +78,21 @@ export class ReportModel {
 
       // Opening stocks (per item & store)
       const openingStocks = await openingStockRepo.find({
-        where: storeId ? { store_id: storeId } : {},
+        where: storeId != null ? { store_id: storeId } : {},
       });
 
-      // Movements before fromDate (to adjust opening)
+      // Movements before fromDate (to adjust opening) — only filter by store_id when provided
+      const earlierWhere: { date: any; store_id?: number } = { date: LessThan(fromDate) };
+      if (storeId != null) earlierWhere.store_id = storeId;
       const earlierMovements = await stockMovementRepo.find({
-        where: {
-          store_id: storeId ? storeId : (undefined as any),
-          date: LessThan(fromDate),
-        } as any,
+        where: earlierWhere,
       });
 
-      // Movements within [fromDate, toDate]
+      // Movements within [fromDate, toDate] — include TRANSFER_IN/TRANSFER_OUT from store transfer notes
+      const periodWhere: { date: any; store_id?: number } = { date: Between(fromDate, toDate) };
+      if (storeId != null) periodWhere.store_id = storeId;
       const periodMovements = await stockMovementRepo.find({
-        where: {
-          store_id: storeId ? storeId : (undefined as any),
-          date: Between(fromDate, toDate),
-        } as any,
+        where: periodWhere,
       });
 
       type Aggregates = {
@@ -283,13 +281,19 @@ export class ReportModel {
     try {
       const transferNoteRepo = this.getStoreTransferNoteRepository();
 
+      // Normalize to full day range so date-only params (e.g. "2025-02-01") include all transfers that day
+      const from = new Date(fromDate);
+      from.setUTCHours(0, 0, 0, 0);
+      const to = new Date(toDate);
+      to.setUTCHours(23, 59, 59, 999);
+
       const qb = transferNoteRepo
         .createQueryBuilder('stn')
         .innerJoinAndSelect('stn.fromStore', 'fromStore')
         .innerJoinAndSelect('stn.toStore', 'toStore')
         .innerJoinAndSelect('stn.details', 'detail')
-        .innerJoinAndSelect('detail.item', 'item')
-        .where('stn.date BETWEEN :fromDate AND :toDate', { fromDate, toDate });
+        .leftJoinAndSelect('detail.item', 'item')
+        .where('stn.date >= :fromDate AND stn.date <= :toDate', { fromDate: from, toDate: to });
 
       if (filters?.from_store_id) {
         qb.andWhere('stn.from_store_id = :fromStoreId', { fromStoreId: filters.from_store_id });

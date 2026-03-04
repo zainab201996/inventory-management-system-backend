@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { RateModel } from './rate.model';
+import { AuthModel } from '../auth/auth.model';
 import { sendSuccessResponse, sendCreatedResponse, sendNotFoundResponse, sendValidationErrorResponse } from '../../utils/responseHandler';
 import { CreateRateRequest, UpdateRateRequest, PaginationParams } from '../../types';
 import logger from '../../utils/logger';
@@ -40,9 +41,11 @@ export class RateController {
 
       const filters = item_id ? { item_id } : undefined;
 
+      const settings = await AuthModel.getSettings();
+
       if (all) {
         const result = await RateModel.getRates({}, filters, true);
-        return sendSuccessResponse(res, result.rates, 'Rates retrieved successfully');
+        return sendSuccessResponse(res, { rates: result.rates, currency_symbol: settings.currency_symbol, currency_code: settings.currency_code }, 'Rates retrieved successfully');
       }
 
       const pagination: PaginationParams = {
@@ -61,7 +64,9 @@ export class RateController {
           limit: pagination.limit || 10,
           total: result.total,
           total_pages: Math.ceil(result.total / (pagination.limit || 10))
-        }
+        },
+        currency_symbol: settings.currency_symbol,
+        currency_code: settings.currency_code
       };
 
       sendSuccessResponse(res, response, 'Rates retrieved successfully');
@@ -87,7 +92,8 @@ export class RateController {
         return sendNotFoundResponse(res, 'No rate found for this item');
       }
 
-      sendSuccessResponse(res, rate, 'Current rate retrieved successfully');
+      const settings = await AuthModel.getSettings();
+      sendSuccessResponse(res, { ...rate, currency_symbol: settings.currency_symbol, currency_code: settings.currency_code }, 'Current rate retrieved successfully');
     } catch (error) {
       logger.error('Error getting current rate', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -111,7 +117,8 @@ export class RateController {
         return sendNotFoundResponse(res, 'Rate not found');
       }
 
-      sendSuccessResponse(res, rate, 'Rate retrieved successfully');
+      const settings = await AuthModel.getSettings();
+      sendSuccessResponse(res, { ...rate, currency_symbol: settings.currency_symbol, currency_code: settings.currency_code }, 'Rate retrieved successfully');
     } catch (error) {
       logger.error('Error getting rate by ID', {
         error: error instanceof Error ? error.message : 'Unknown error',

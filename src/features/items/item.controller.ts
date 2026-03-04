@@ -103,11 +103,7 @@ export class ItemController {
         return sendValidationErrorResponse(res, 'Invalid item ID');
       }
 
-      const includeOpeningStocks = req.query.include_opening_stocks === 'true';
-      
-      const item = includeOpeningStocks 
-        ? await ItemModel.getItemWithOpeningStocks(itemId)
-        : await ItemModel.getItemById(itemId);
+      const item = await ItemModel.getItemWithOpeningStocks(itemId);
       
       if (!item) {
         return sendNotFoundResponse(res, 'Item not found');
@@ -132,6 +128,12 @@ export class ItemController {
       }
 
       const itemData: UpdateItemRequest = req.body;
+      if (itemData.item_code !== undefined && itemData.item_code !== null) {
+        const code = String(itemData.item_code).trim();
+        if (!/^[0-9]+$/.test(code)) {
+          return sendValidationErrorResponse(res, 'Item code must be numeric only');
+        }
+      }
       const updatedItem = await ItemModel.updateItem(itemId, itemData, req.user?.user_id);
 
       if (!updatedItem) {

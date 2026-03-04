@@ -160,4 +160,64 @@ export class StockCalculator {
 
     return results;
   }
+
+  /**
+   * Get current stock per store for a single item.
+   *
+   * @param itemId - Item ID
+   * @returns Map of storeId -> current stock
+   */
+  static async getCurrentStockByStoreForItem(
+    itemId: number
+  ): Promise<Map<number, number>> {
+    try {
+      const openingStockRepo = this.getOpeningStockRepository();
+      const stockMovementRepo = this.getStockMovementRepository();
+
+      const openingStocks = await openingStockRepo.find({
+        where: { item_id: itemId },
+      });
+
+      const movements = await stockMovementRepo.find({
+        where: { item_id: itemId },
+      });
+
+      const stockByStore = new Map<number, number>();
+
+      openingStocks.forEach((os) => {
+        const qty = parseFloat(os.opening_qty.toString());
+        const current = stockByStore.get(os.store_id) ?? 0;
+        stockByStore.set(os.store_id, current + qty);
+      });
+
+      movements.forEach((mv) => {
+        const qty = parseFloat(mv.qty.toString());
+        const current = stockByStore.get(mv.store_id) ?? 0;
+
+        switch (mv.movement_type) {
+          case MovementType.OPENING_STOCK:
+            // Opening stock already accounted for above
+            break;
+          case MovementType.TRANSFER_IN:
+          case MovementType.IN:
+            stockByStore.set(mv.store_id, current + qty);
+            break;
+          case MovementType.TRANSFER_OUT:
+          case MovementType.OUT:
+            stockByStore.set(mv.store_id, current - qty);
+            break;
+          default:
+            break;
+        }
+      });
+
+      return stockByStore;
+    } catch (error) {
+      logger.error('Error calculating current stock by store for item', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        itemId,
+      });
+      throw error;
+    }
+  }
 }

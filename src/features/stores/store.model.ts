@@ -21,9 +21,7 @@ export class StoreModel {
       .getRawOne<{ id: number }>();
 
     const nextNumber = (last?.id ?? 0) + 1;
-    const padded = nextNumber.toString().padStart(4, '0');
-
-    return `ST${padded}`;
+    return nextNumber.toString().padStart(4, '0');
   }
 
   static async createStore(storeData: CreateStoreRequest, updatedBy?: number): Promise<Store> {

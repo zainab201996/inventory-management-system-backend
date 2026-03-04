@@ -8,6 +8,7 @@ All endpoints (except `/api/auth/*`) require authentication via JWT token:
 ```
 Authorization: Bearer <your-jwt-token>
 ```
+Login and token-verify responses include **settings** `{ currency_symbol, currency_code }` for use with Rates. Use **GET** `/api/settings` to refresh (authenticated).
 
 ## Endpoints Overview
 
@@ -20,10 +21,10 @@ Authorization: Bearer <your-jwt-token>
 - **Body:**
   ```json
   {
-    "store_code": "STORE-001",
     "store_name": "Main Warehouse"
   }
   ```
+- **Note:** `store_code` is auto-generated (numeric). On update, if provided it must be **numeric only**.
 - **Response:** Created store object
 
 #### Get All Stores
@@ -45,11 +46,11 @@ Authorization: Bearer <your-jwt-token>
 - **Body:**
   ```json
   {
-    "store_code": "STORE-001-UPDATED",
+    "store_code": "0001",
     "store_name": "Updated Warehouse Name"
   }
   ```
-- **Response:** Updated store object
+- **Response:** Updated store object (store_code must be numeric only)
 
 #### Delete Store
 - **DELETE** `/api/stores/:id`
@@ -66,7 +67,6 @@ Authorization: Bearer <your-jwt-token>
 - **Body:**
   ```json
   {
-    "item_code": "ITEM-001",
     "item_name": "Laptop Dell XPS 15",
     "item_category": "Electronics",
     "opening_stocks": [
@@ -82,7 +82,7 @@ Authorization: Bearer <your-jwt-token>
   }
   ```
 - **Response:** Created item object
-- **Note:** Opening stocks are optional. If provided, stock movements are automatically created.
+- **Note:** `item_code` is auto-generated (numeric). Opening stocks are optional. If provided, stock movements are automatically created. On update, item_code must be **numeric only**.
 
 #### Get All Items
 - **GET** `/api/items`
@@ -150,15 +150,15 @@ Authorization: Bearer <your-jwt-token>
   - `sort_order` (optional): 'asc' or 'desc' (default: desc)
   - `item_id` (optional): Filter by item ID
   - `all` (optional): 'true' to get all without pagination
-- **Response:** Paginated list of rates (includes item relation)
+- **Response:** Paginated list of rates plus `currency_symbol`, `currency_code` (from settings)
 
 #### Get Current Rate for Item
 - **GET** `/api/rates/current/:item_id`
-- **Response:** Most recent rate for the item
+- **Response:** Most recent rate for the item plus `currency_symbol`, `currency_code`
 
 #### Get Rate by ID
 - **GET** `/api/rates/:id`
-- **Response:** Rate object (includes item relation)
+- **Response:** Rate object plus `currency_symbol`, `currency_code`
 
 #### Update Rate
 - **PUT** `/api/rates/:id`
@@ -186,7 +186,7 @@ Authorization: Bearer <your-jwt-token>
 - **Body:**
   ```json
   {
-    "v_no": "STN-001",
+    "v_no": "1",
     "date": "2024-01-15",
     "ref_no": "REF-123",
     "from_store_id": 1,
@@ -214,7 +214,12 @@ Authorization: Bearer <your-jwt-token>
 - **Note:** 
   - Automatically creates stock movements (OUT from source, IN to destination)
   - `created_by` is automatically set from authenticated user
-  - `v_no` must be unique
+  - `v_no` must be **numeric only** and unique; it is **locked** after creation (not updatable)
+
+#### Get Source Stores With Stock (for transfer "from store" list)
+- **GET** `/api/store-transfer-notes/source-stores`
+- **Query Parameters:** `item_id` (required), `min_qty` (optional, default 0)
+- **Response:** List of `{ store_id, store_code, store_name, current_stock }` for stores that have stock for the item
 
 #### Get All Transfer Notes
 - **GET** `/api/store-transfer-notes`

@@ -99,6 +99,12 @@ export class StoreController {
       }
 
       const storeData: UpdateStoreRequest = req.body;
+      if (storeData.store_code !== undefined && storeData.store_code !== null) {
+        const code = String(storeData.store_code).trim();
+        if (!/^[0-9]+$/.test(code)) {
+          return sendValidationErrorResponse(res, 'Store code must be numeric only');
+        }
+      }
       const updatedStore = await StoreModel.updateStore(storeId, storeData, req.user?.user_id);
 
       if (!updatedStore) {

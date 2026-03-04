@@ -27,6 +27,9 @@ export class ReportController {
         return sendValidationErrorResponse(res, 'fromDate cannot be after toDate');
       }
 
+      from.setUTCHours(0, 0, 0, 0);
+      to.setUTCHours(23, 59, 59, 999);
+
       const storeId = store_id ? parseInt(store_id as string, 10) : undefined;
       if (store_id && isNaN(storeId as number)) {
         return sendValidationErrorResponse(res, 'store_id must be a valid number');
@@ -72,6 +75,9 @@ export class ReportController {
       if (from > to) {
         return sendValidationErrorResponse(res, 'fromDate cannot be after toDate');
       }
+
+      from.setUTCHours(0, 0, 0, 0);
+      to.setUTCHours(23, 59, 59, 999);
 
       const fromStoreId = from_store_id ? parseInt(from_store_id as string, 10) : undefined;
       const toStoreId = to_store_id ? parseInt(to_store_id as string, 10) : undefined;

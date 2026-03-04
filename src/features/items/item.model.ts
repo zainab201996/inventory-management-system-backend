@@ -31,9 +31,7 @@ export class ItemModel {
       .getRawOne<{ id: number }>();
 
     const nextNumber = (last?.id ?? 0) + 1;
-    const padded = nextNumber.toString().padStart(4, '0');
-
-    return `IT${padded}`;
+    return nextNumber.toString().padStart(4, '0');
   }
 
   static async createItem(itemData: CreateItemRequest, updatedBy?: number): Promise<Item> {
