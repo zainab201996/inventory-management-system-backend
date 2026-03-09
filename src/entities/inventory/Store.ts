@@ -30,6 +30,12 @@ export class Store {
   @Column({ name: 'updated_by', type: 'integer', nullable: true })
   updated_by: number | null;
 
+  @Column({ name: 'is_deleted', type: 'boolean', default: false })
+  is_deleted: boolean;
+
+  @Column({ name: 'deleted_at', type: 'timestamp', nullable: true })
+  deleted_at: Date | null;
+
   // Relations
   @OneToMany(() => OpeningStock, (openingStock) => openingStock.store)
   openingStocks: OpeningStock[];

@@ -47,7 +47,7 @@ export class StoreModel {
     try {
       const repository = this.getRepository();
       const store = await repository.findOne({
-        where: { id },
+        where: { id, is_deleted: false },
         relations: [],
       });
 
@@ -88,13 +88,14 @@ export class StoreModel {
 
       const [stores, total] = await Promise.all([
         repository.find({
+          where: { is_deleted: false },
           skip,
           take,
           order: {
             [sortBy]: sortOrder,
           },
         }),
-        repository.count(),
+        repository.count({ where: { is_deleted: false } }),
       ]);
 
       // Get updated_by usernames
@@ -124,6 +125,7 @@ export class StoreModel {
     try {
       const repository = this.getRepository();
       return await repository.find({
+        where: { is_deleted: false },
         order: { store_name: 'ASC' },
       });
     } catch (error) {
@@ -163,14 +165,17 @@ export class StoreModel {
   static async deleteStore(id: number): Promise<{ success: boolean; message: string }> {
     try {
       const repository = this.getRepository();
-      const store = await repository.findOne({ where: { id } });
+      const store = await repository.findOne({ where: { id, is_deleted: false } });
       
       if (!store) {
         return { success: false, message: 'Store not found' };
       }
 
-      await repository.delete(id);
-      return { success: true, message: 'Store deleted successfully' };
+      await repository.update(id, {
+        is_deleted: true,
+        deleted_at: new Date(),
+      });
+      return { success: true, message: 'Store deleted successfully (soft delete)' };
     } catch (error) {
       logger.error('Error deleting store', {
         error: error instanceof Error ? error.message : 'Unknown error',

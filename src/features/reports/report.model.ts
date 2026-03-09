@@ -65,9 +65,9 @@ export class ReportModel {
       const storeRepo = this.getStoreRepository();
       const rateRepo = this.getRateRepository();
 
-      // Load stores in scope
+      // Load stores in scope (exclude soft-deleted)
       const stores = await storeRepo.find({
-        where: storeId ? { id: storeId } : {},
+        where: storeId ? { id: storeId, is_deleted: false } : { is_deleted: false },
       });
 
       if (stores.length === 0) {
@@ -181,11 +181,11 @@ export class ReportModel {
         return [];
       }
 
-      // Load item & store info
+      // Load item & store info (exclude soft-deleted)
       const itemIds = Array.from(new Set(Array.from(aggregates.values()).map((a) => a.item_id)));
       const [items, rates] = await Promise.all([
         itemRepo.find({
-          where: itemIds.map((id) => ({ id })),
+          where: itemIds.map((id) => ({ id, is_deleted: false })),
         }),
         rateRepo
           .createQueryBuilder('rate')

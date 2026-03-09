@@ -30,10 +30,11 @@ export class RateModel {
   static async getRateById(id: number): Promise<Rate | null> {
     try {
       const repository = this.getRepository();
-      return await repository.findOne({
-        where: { id },
-        relations: ['item'],
-      });
+      return await repository
+        .createQueryBuilder('rate')
+        .innerJoinAndSelect('rate.item', 'item', 'item.is_deleted = false')
+        .where('rate.id = :id', { id })
+        .getOne();
     } catch (error) {
       logger.error('Error getting rate by ID', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -58,23 +59,21 @@ export class RateModel {
       const sortBy = pagination.sort_by || 'effective_date';
       const sortOrder = pagination.sort_order === 'asc' ? 'ASC' : 'DESC';
 
-      const where: any = {};
+      const qb = repository
+        .createQueryBuilder('rate')
+        .innerJoinAndSelect('rate.item', 'item', 'item.is_deleted = false');
+
       if (filters?.item_id) {
-        where.item_id = filters.item_id;
+        qb.andWhere('rate.item_id = :itemId', { itemId: filters.item_id });
       }
 
-      const [rates, total] = await Promise.all([
-        repository.find({
-          where,
-          skip,
-          take,
-          relations: ['item'],
-          order: {
-            [sortBy]: sortOrder,
-          },
-        }),
-        repository.count({ where }),
-      ]);
+      qb.orderBy(`rate.${sortBy}`, sortOrder);
+
+      if (!all) {
+        qb.skip(skip!).take(take!);
+      }
+
+      const [rates, total] = await Promise.all([qb.getMany(), qb.getCount()]);
 
       return { rates, total };
     } catch (error) {
@@ -88,13 +87,12 @@ export class RateModel {
   static async getCurrentRate(itemId: number): Promise<Rate | null> {
     try {
       const repository = this.getRepository();
-      return await repository.findOne({
-        where: { item_id: itemId },
-        relations: ['item'],
-        order: {
-          effective_date: 'DESC',
-        },
-      });
+      return await repository
+        .createQueryBuilder('rate')
+        .innerJoinAndSelect('rate.item', 'item', 'item.is_deleted = false')
+        .where('rate.item_id = :itemId', { itemId })
+        .orderBy('rate.effective_date', 'DESC')
+        .getOne();
     } catch (error) {
       logger.error('Error getting current rate', {
         error: error instanceof Error ? error.message : 'Unknown error',

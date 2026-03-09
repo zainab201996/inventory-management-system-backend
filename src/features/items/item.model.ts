@@ -97,7 +97,7 @@ export class ItemModel {
     try {
       const repository = this.getRepository();
       const item = await repository.findOne({
-        where: { id },
+        where: { id, is_deleted: false },
       });
 
       if (!item) return null;
@@ -172,13 +172,14 @@ export class ItemModel {
 
       const [items, total] = await Promise.all([
         repository.find({
+          where: { is_deleted: false },
           skip,
           take,
           order: {
             [sortBy]: sortOrder,
           },
         }),
-        repository.count(),
+        repository.count({ where: { is_deleted: false } }),
       ]);
 
       // Get updated_by usernames
@@ -307,8 +308,8 @@ export class ItemModel {
       const storeIds = Array.from(new Set(lowStockCombos.map(c => c.storeId)));
 
       const [items, stores] = await Promise.all([
-        itemRepo.find({ where: itemIds.map(id => ({ id })) }),
-        storeRepo.find({ where: storeIds.map((id: number) => ({ id })) }),
+        itemRepo.find({ where: itemIds.map(id => ({ id, is_deleted: false })) }),
+        storeRepo.find({ where: storeIds.map((id: number) => ({ id, is_deleted: false })) }),
       ]);
 
       const itemMap = new Map<number, Item>();
@@ -441,14 +442,17 @@ export class ItemModel {
   static async deleteItem(id: number): Promise<{ success: boolean; message: string }> {
     try {
       const repository = this.getRepository();
-      const item = await repository.findOne({ where: { id } });
+      const item = await repository.findOne({ where: { id, is_deleted: false } });
       
       if (!item) {
         return { success: false, message: 'Item not found' };
       }
 
-      await repository.delete(id);
-      return { success: true, message: 'Item deleted successfully' };
+      await repository.update(id, {
+        is_deleted: true,
+        deleted_at: new Date(),
+      });
+      return { success: true, message: 'Item deleted successfully (soft delete)' };
     } catch (error) {
       logger.error('Error deleting item', {
         error: error instanceof Error ? error.message : 'Unknown error',

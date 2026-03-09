@@ -55,6 +55,7 @@ Login and token-verify responses include **settings** `{ currency_symbol, curren
 #### Delete Store
 - **DELETE** `/api/stores/:id`
 - **Response:** Success message
+- **Behavior:** Soft delete – marks the store as deleted (it is excluded from listings, but existing transactions remain for reporting)
 
 ---
 
@@ -121,6 +122,7 @@ Login and token-verify responses include **settings** `{ currency_symbol, curren
 #### Delete Item
 - **DELETE** `/api/items/:id`
 - **Response:** Success message
+- **Behavior:** Soft delete – marks the item as deleted (it is excluded from listings, but existing stock movements and transactions remain for reporting)
 
 ---
 
