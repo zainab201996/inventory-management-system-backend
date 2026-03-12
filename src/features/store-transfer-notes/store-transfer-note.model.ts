@@ -37,6 +37,21 @@ export class StoreTransferNoteModel {
       const detailRepo = queryRunner.manager.getRepository(StoreTransferNoteDetail);
       const stockMovementRepo = queryRunner.manager.getRepository(StockMovement);
 
+      // Determine next voucher number (auto-increment from last purely numeric v_no)
+      const lastNote = await transferNoteRepo
+        .createQueryBuilder('note')
+        .where("note.v_no ~ '^[0-9]+$'")
+        .orderBy('CAST(note.v_no AS BIGINT)', 'DESC')
+        .getOne();
+
+      let nextVoucherNumber = '1';
+      if (lastNote?.v_no) {
+        const lastNumber = parseInt(lastNote.v_no, 10);
+        if (!Number.isNaN(lastNumber) && lastNumber >= 0) {
+          nextVoucherNumber = String(lastNumber + 1);
+        }
+      }
+
       // Get store information for better error messages
       const storeRepo = this.getStoreRepository();
       const fromStore = await storeRepo.findOne({
@@ -79,7 +94,7 @@ export class StoreTransferNoteModel {
 
       // Create master record
       const transferNote = transferNoteRepo.create({
-        v_no: transferData.v_no,
+        v_no: nextVoucherNumber,
         date: new Date(transferData.date),
         ref_no: transferData.ref_no || null,
         from_store_id: transferData.from_store_id,
@@ -111,7 +126,7 @@ export class StoreTransferNoteModel {
           qty: detail.qty,
           reference_type: 'TRANSFER_NOTE',
           reference_id: savedTransferNote.id,
-          v_no: transferData.v_no,
+          v_no: nextVoucherNumber,
           date: new Date(transferData.date),
         });
         await stockMovementRepo.save(outMovement);
@@ -124,7 +139,7 @@ export class StoreTransferNoteModel {
           qty: detail.qty,
           reference_type: 'TRANSFER_NOTE',
           reference_id: savedTransferNote.id,
-          v_no: transferData.v_no,
+          v_no: nextVoucherNumber,
           date: new Date(transferData.date),
         });
         await stockMovementRepo.save(inMovement);
@@ -181,25 +196,32 @@ export class StoreTransferNoteModel {
       const sortBy = pagination.sort_by || 'date';
       const sortOrder = pagination.sort_order === 'asc' ? 'ASC' : 'DESC';
 
-      const where: any = {};
+      const qb = repository
+        .createQueryBuilder('stn')
+        .innerJoinAndSelect('stn.fromStore', 'fromStore')
+        .innerJoinAndSelect('stn.toStore', 'toStore')
+        .leftJoinAndSelect('stn.details', 'details')
+        .leftJoinAndSelect('details.item', 'item')
+        .where('fromStore.is_deleted = false')
+        .andWhere('toStore.is_deleted = false');
+
       if (filters?.from_store_id) {
-        where.from_store_id = filters.from_store_id;
+        qb.andWhere('stn.from_store_id = :fromStoreId', { fromStoreId: filters.from_store_id });
       }
       if (filters?.to_store_id) {
-        where.to_store_id = filters.to_store_id;
+        qb.andWhere('stn.to_store_id = :toStoreId', { toStoreId: filters.to_store_id });
+      }
+
+      qb.orderBy(`stn.${sortBy}`, sortOrder);
+
+      const dataQb = qb.clone();
+      if (!all && typeof skip === 'number' && typeof take === 'number') {
+        dataQb.skip(skip).take(take);
       }
 
       const [transferNotes, total] = await Promise.all([
-        repository.find({
-          where,
-          skip,
-          take,
-          relations: ['fromStore', 'toStore'],
-          order: {
-            [sortBy]: sortOrder,
-          },
-        }),
-        repository.count({ where }),
+        dataQb.getMany(),
+        qb.getCount(),
       ]);
 
       return { transferNotes, total };

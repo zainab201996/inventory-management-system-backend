@@ -13,13 +13,8 @@ export class StoreTransferNoteController {
     try {
       const transferData: CreateStoreTransferNoteRequest = req.body;
 
-      if (!transferData.v_no || !transferData.from_store_id || !transferData.to_store_id) {
-        return sendValidationErrorResponse(res, 'Voucher number, from store, and to store are required');
-      }
-
-      const voucherNumber = String(transferData.v_no).trim();
-      if (!/^[0-9]+$/.test(voucherNumber)) {
-        return sendValidationErrorResponse(res, 'Voucher number must be numeric only');
+      if (!transferData.from_store_id || !transferData.to_store_id) {
+        return sendValidationErrorResponse(res, 'From store and to store are required');
       }
 
       if (transferData.from_store_id === transferData.to_store_id) {

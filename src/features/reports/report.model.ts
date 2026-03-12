@@ -230,7 +230,7 @@ export class ReportModel {
 
         rows.push({
           store_id: store.id,
-          store_code: store.store_code,
+          store_code: Number(store.store_code),
           store_name: store.store_name,
           item_id: item.id,
           item_code: item.item_code,
@@ -250,7 +250,7 @@ export class ReportModel {
         if (a.store_code === b.store_code) {
           return a.item_code.localeCompare(b.item_code);
         }
-        return a.store_code.localeCompare(b.store_code);
+        return a.store_code - b.store_code;
       });
 
       return rows;
@@ -293,7 +293,9 @@ export class ReportModel {
         .innerJoinAndSelect('stn.toStore', 'toStore')
         .innerJoinAndSelect('stn.details', 'detail')
         .leftJoinAndSelect('detail.item', 'item')
-        .where('stn.date >= :fromDate AND stn.date <= :toDate', { fromDate: from, toDate: to });
+        .where('stn.date >= :fromDate AND stn.date <= :toDate', { fromDate: from, toDate: to })
+        .andWhere('fromStore.is_deleted = false')
+        .andWhere('toStore.is_deleted = false');
 
       if (filters?.from_store_id) {
         qb.andWhere('stn.from_store_id = :fromStoreId', { fromStoreId: filters.from_store_id });
@@ -318,10 +320,10 @@ export class ReportModel {
             ref_no: note.ref_no,
             order_no: note.order_no,
             from_store_id: note.from_store_id,
-            from_store_code: note.fromStore?.store_code || '',
+            from_store_code: note.fromStore ? Number(note.fromStore.store_code) : null,
             from_store_name: note.fromStore?.store_name || '',
             to_store_id: note.to_store_id,
-            to_store_code: note.toStore?.store_code || '',
+            to_store_code: note.toStore ? Number(note.toStore.store_code) : null,
             to_store_name: note.toStore?.store_name || '',
             item_id: detail.item_id,
             item_code: detail.item?.item_code || detail.item_code,

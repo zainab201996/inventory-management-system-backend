@@ -22,6 +22,7 @@ import itemRoutes from './features/items/item.routes';
 import rateRoutes from './features/rates/rate.routes';
 import storeTransferNoteRoutes from './features/store-transfer-notes/store-transfer-note.routes';
 import reportRoutes from './features/reports/report.routes';
+import dashboardRoutes from './features/dashboard/dashboard.routes';
 import settingsRoutes from './features/settings/settings.routes';
 
 // Load environment variables
@@ -119,6 +120,7 @@ app.use('/api/rates', rateRoutes);
 app.use('/api/store-transfer-notes', storeTransferNoteRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Handle undefined routes
 app.all('*', (req: Request, res: Response, next: NextFunction) => {

@@ -59,6 +59,8 @@ export const ROUTE_PAGE_MAPPINGS: { [routePath: string]: RoutePermission } = {
   '/api/store-transfer-notes': 'store-transfer-notes',
   // Inventory Reports - reuse store-transfer-notes permissions
   '/api/reports': 'store-transfer-notes',
+  // Inventory Dashboard - reuse store-transfer-notes permissions
+  '/api/dashboard': 'store-transfer-notes',
   
   // Note: /api/auth routes are intentionally not mapped (public routes)
 };
